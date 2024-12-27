@@ -1,0 +1,26 @@
+﻿@if (IsDisplayed)
+{
+    @ChildContent
+}
+
+@code {
+    [CascadingParameter]
+    public Pages.Counter Counter { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public RenderFragment ChildContent { get; set; } = default!;
+
+    [Parameter]
+    public bool IsDisplayed { get; set; } = true;
+
+    protected override void OnInitialized()
+    {
+        Counter.OnToggleDisplayRequested.Subscribe(this, ToggleDisplay);
+    }
+
+    private void ToggleDisplay()
+    {
+        IsDisplayed = !IsDisplayed;
+        StateHasChanged();
+    }
+}

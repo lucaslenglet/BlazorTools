@@ -1,0 +1,27 @@
+﻿@using BlazorTools.Demo.Components.Counter
+
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+@page "/counter"
+
+@inject ILogger<Counter> Logger
+
+<PageTitle>Counter</PageTitle>
+
+<h1>Counter</h1>
+
+@{
+    Logger.LogRender(this.GetType().Name);
+}
+
+<CascadingValue Value="this" IsFixed="true">
+    <ButtonCounter />
+    <ToggleCounter>
+        <DisplayCounter />
+    </ToggleCounter>
+</CascadingValue>
+
+@code {
+    public EventCallbackBucket OnIncrementRequested { get; } = new();
+    public EventCallbackBucket OnToggleDisplayRequested { get; } = new();
+}

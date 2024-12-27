@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35527.113
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorTools", "BlazorTools\BlazorTools.csproj", "{DAB96303-BDDC-41F3-9271-47DB64326EA2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorTools.Demo", "BlazorTools.Demo\BlazorTools.Demo.csproj", "{7E37B19C-DD5E-4C89-A354-3A393123757D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DAB96303-BDDC-41F3-9271-47DB64326EA2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DAB96303-BDDC-41F3-9271-47DB64326EA2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DAB96303-BDDC-41F3-9271-47DB64326EA2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DAB96303-BDDC-41F3-9271-47DB64326EA2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7E37B19C-DD5E-4C89-A354-3A393123757D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7E37B19C-DD5E-4C89-A354-3A393123757D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7E37B19C-DD5E-4C89-A354-3A393123757D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7E37B19C-DD5E-4C89-A354-3A393123757D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
