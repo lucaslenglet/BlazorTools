@@ -6,30 +6,30 @@ namespace BlazorTools;
 public static class LoggerExtensions
 {
     private static readonly long startTicks = TimeProvider.System.GetTimestamp();
-    private static long previousTicks = default;
+    private static long previousTicks = TimeProvider.System.GetTimestamp();
     private readonly static Lock previousTicksLock = new();
 
     [Conditional("DEBUG")]
     public static void LogRender(this ILogger logger,
-        [System.Runtime.CompilerServices.CallerFilePath] string sourceFilePath = "",
-        [System.Runtime.CompilerServices.CallerLineNumber] int sourceLineNumber = 0)
+        [System.Runtime.CompilerServices.CallerFilePath] string sourceFilePath = "")
     {
-        if (logger.IsEnabled(LogLevel.Debug))
+        const LogLevel logLevel = LogLevel.Debug;
+        if (logger.IsEnabled(logLevel))
         {
             lock (previousTicksLock)
             {
                 var currentTicks = TimeProvider.System.GetTimestamp();
-                logger.LogDebug(
+                logger.Log(
+                    logLevel,
                     message,
                     TimeProvider.System.GetElapsedTime(startTicks, currentTicks).Duration(),
                     TimeProvider.System.GetElapsedTime(previousTicks, currentTicks),
                     Environment.CurrentManagedThreadId,
-                    Path.GetFileNameWithoutExtension(sourceFilePath),
-                    sourceLineNumber);
+                    Path.GetFileNameWithoutExtension(sourceFilePath));
                 previousTicks = currentTicks;
             }
         }
     }
 
-    const string message = "{ticks} | {fromPreviousTicks} | {threadId} | Rendering component: {componentName} line {sourceLineNumber}";
+    const string message = "{ticksStart} | {ticksPrevious} | {threadId} | {componentName}";
 }
