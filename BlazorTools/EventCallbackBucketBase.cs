@@ -8,16 +8,17 @@ public class EventCallbackBucketBase<TCallback>
 
     public EventSubscription Subscribe(TCallback callback)
     {
-        var subscription = CreateSubscription();
+        return Subscribe(new(), callback);
+    }
+
+    public EventSubscription Subscribe(EventSubscription subscription, TCallback callback)
+    {
         EventCallbacks.TryAdd(subscription, callback);
         return subscription;
     }
 
-    public void Unsubscribe(EventSubscription subscription) =>
+    public bool Unsubscribe(EventSubscription subscription) =>
         EventCallbacks.TryRemove(subscription, out _);
 
     public void Clear() => EventCallbacks.Clear();
-
-    protected EventSubscription CreateSubscription() =>
-        EventSubscription.FromRevokeCallback(this, Unsubscribe);
 }

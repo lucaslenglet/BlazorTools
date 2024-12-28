@@ -1,0 +1,29 @@
+﻿@implements IDisposable
+
+@inject ILogger<Buttons> Logger
+
+@{
+    Logger.LogRender();
+}
+
+<p class="mt-2" role="status">Current count: @Counter.CurrentCount</p>
+
+@code {
+    [CascadingParameter]
+    public Pages.Counter Counter { get; set; } = default!;
+
+    private int currentCount;
+
+    private EventSubscription OnCountUpdatedSubscription;
+
+    protected override void OnInitialized()
+    {
+        currentCount = Counter.CurrentCount;
+        OnCountUpdatedSubscription = Counter.OnCountUpdated.Subscribe(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        Counter.OnCountUpdated.Unsubscribe(OnCountUpdatedSubscription);
+    }
+}

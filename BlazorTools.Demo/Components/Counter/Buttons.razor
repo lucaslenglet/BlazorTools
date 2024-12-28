@@ -1,0 +1,42 @@
+﻿@inject ILogger<Buttons> Logger
+
+@{
+    Logger.LogRender();
+}
+
+<button class="btn btn-primary" @onclick="AddOne">Click me</button>
+
+<button class="btn btn-primary" @onclick="Add10">Add 10</button>
+
+<button class="btn btn-primary" @onclick="Reset">Reset</button>
+
+<button class="btn btn-secondary" @onclick="ToggleDisplay">Toggle Display</button>
+
+@code {
+    [CascadingParameter]
+    public Pages.Counter Counter { get; set; } = default!;
+
+    private Task AddOne() => SetCount(Counter.CurrentCount + 1);
+
+    private Task Add10() => SetCount(Counter.CurrentCount + 10);
+
+    private Task Reset() => SetCount(default);
+
+    private async Task SetCount(int count)
+    {
+        if (Counter.CurrentCount == count)
+        {
+            return;
+        }
+        Counter.CurrentCount = count;
+        await Counter.OnCountUpdated.InvokeAsync();
+    }
+
+    private async Task ToggleDisplay()
+    {
+        Counter.Display = !Counter.Display;
+        await Counter.OnDisplayChanged.InvokeAsync();
+    }
+
+    protected override bool ShouldRender() => false;
+}

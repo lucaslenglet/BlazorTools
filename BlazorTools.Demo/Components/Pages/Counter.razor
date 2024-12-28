@@ -11,17 +11,27 @@
 <h1>Counter</h1>
 
 @{
-    Logger.LogRender(this.GetType().Name);
+    Logger.LogRender();
 }
 
 <CascadingValue Value="this" IsFixed="true">
-    <ButtonCounter />
-    <ToggleCounter>
-        <DisplayCounter />
-    </ToggleCounter>
+
+    <Buttons />
+
+    <DisplayToggle>
+        <Display />
+    </DisplayToggle>
+
 </CascadingValue>
 
 @code {
-    public EventCallbackBucket OnIncrementRequested { get; } = new();
-    public EventCallbackBucket OnToggleDisplayRequested { get; } = new();
+    public EventCallbackBucket OnCountUpdated { get; } = new();
+    public EventCallbackBucket OnDisplayChanged { get; } = new();
+
+    public int CurrentCount { get; set; }
+
+    public bool Display { get; set; } = true;
+
+    // Optional; useful when this component provides methods to child components that can sometimes trigger a render of the whole component
+    protected override bool ShouldRender() => false;
 }

@@ -1,20 +1,15 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿namespace BlazorTools;
 
-namespace BlazorTools;
-
-public class EventCallbackBucket : EventCallbackBucketBase<EventCallback>
+public class EventCallbackBucket : EventCallbackBucketBase<Func<Task>>
 {
-    public EventSubscription Subscribe(object receiver, Action callback)
+    public EventSubscription Subscribe(Action callback)
     {
-        var subscription = CreateSubscription();
-        EventCallbacks.TryAdd(subscription, EventCallback.Factory.Create(receiver, callback));
-        return subscription;
-    }
-
-    public EventSubscription Subscribe(object receiver, Func<Task> callback)
-    {
-        var subscription = CreateSubscription();
-        EventCallbacks.TryAdd(subscription, EventCallback.Factory.Create(receiver, callback));
+        var subscription = new EventSubscription();
+        EventCallbacks.TryAdd(subscription, () =>
+        {
+            callback();
+            return Task.CompletedTask;
+        });
         return subscription;
     }
 
@@ -22,7 +17,7 @@ public class EventCallbackBucket : EventCallbackBucketBase<EventCallback>
     {
         foreach (var callback in EventCallbacks)
         {
-            await callback.Value.InvokeAsync();
+            await callback.Value();
         }
     }
 }
