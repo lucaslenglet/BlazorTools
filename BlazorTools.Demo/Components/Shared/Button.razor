@@ -18,7 +18,7 @@
 </button>
 
 @code {
-    [Parameter, ]
+    [Parameter,]
     public EventCallback OnClick { get; set; }
 
     [Parameter]
@@ -29,9 +29,6 @@
 
     [Parameter]
     public ButtonStyle? Style { get; set; } = ButtonStyle.primary;
-
-    [CascadingParameter]
-    public HttpContext? HttpContext { get; set; }
 
     private bool disabled = false;
     private string? lastExecutionTime;
@@ -50,21 +47,32 @@
             return;
         }
 
-        await ToggleDisable();
-        // var minExecTime = MinExecTime.FromNow(500);
+        // await ToggleDisable(); // 3
 
-        await using var toggleDisable = DeferedExecutionAsync.For(ToggleDisable);
-        var execution = DeferedExecutionAsync.For(MinimumExecutionTime.FromNowAtLeast(milliseconds: 500), min => min.WaitIfUnder(HttpContext?.RequestAborted ?? default));
+        // await using var _ = LockerBuilder.Create(HttpContext)
+        //     .MinimumTime(TimeSpan.FromMilliseconds(500))
+        //     .ToggleDisableUsing(ToggleDisable)
+        //     .Build(); // 3
+
+        await using var _ = await LockerBuilder.Create()
+            .MinimumTime(TimeSpan.FromMilliseconds(500))
+            .ToggleDisableUsing(ToggleDisable)
+            .BuildAndToggle(); // 4
+
+        // var minExecTime = MinExecTime.FromNow(500); // 1
+
+        // await using var toggleDisable = DeferedExecutionAsync.For(ToggleDisable); // 2
+        // var execution = DeferedExecutionAsync.For(MinimumExecutionTime.FromNowAtLeast(milliseconds: 500), min => min.WaitIfUnder(HttpContext?.RequestAborted ?? default)); // 2
 
         await OnClick.InvokeAsync();
 
-        // await minExecTime.WaitIfUnder();
-        // await ToggleDisable();
+        // await minExecTime.WaitIfUnder(); // 1
+        // await ToggleDisable(); // 1
 
-        await execution.DisposeAsync();
+        // await execution.DisposeAsync(); // 2
 
-        var fullExecTime = Stopwatch.GetElapsedTime(execution.Value.Start).TotalSeconds;
-        lastExecutionTime = $"Last exection took {fullExecTime}s";
+        // var fullExecTime = Stopwatch.GetElapsedTime(execution.Value.Start).TotalSeconds; // 2
+        // lastExecutionTime = $"Last exection took {fullExecTime}s"; // 2
     }
 
     private async Task ToggleDisable()
@@ -77,5 +85,89 @@
 
         disabled = true;
         await InvokeAsync(StateHasChanged);
+    }
+
+    public class Locker : IAsyncDisposable
+    {
+        private DeferedExecutionAsync? deferedToggleDisable;
+        private DeferedExecutionAsync<MinimumExecutionTime>? deferedMinimumTimeExecution;
+        private CancellationToken cancellationToken;
+        private bool isDisposingOrDisposed = false;
+        private readonly Lock _lock = new();
+
+        public Locker(TimeSpan? minimumTime, Func<Task>? toggleDisable, CancellationToken cancellationToken)
+        {
+            this.cancellationToken = cancellationToken;
+
+            if (toggleDisable is not null)
+            {
+                deferedToggleDisable = DeferedExecutionAsync.For(
+                    func: toggleDisable);
+            }
+
+            if (minimumTime is not null)
+            {
+                deferedMinimumTimeExecution = DeferedExecutionAsync.For(
+                    value: MinimumExecutionTime.FromNowAtLeast(minimumTime.Value), 
+                    func: min => min.WaitIfUnder(cancellationToken));
+            }
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            lock (_lock)
+            {
+                if (isDisposingOrDisposed)
+                {
+                    return;
+                }
+
+                isDisposingOrDisposed = true;
+            }
+
+            if (deferedMinimumTimeExecution is not null)
+            {
+                await deferedMinimumTimeExecution.DisposeAsync();
+            }
+
+            if (deferedToggleDisable is not null)
+            {
+                await deferedToggleDisable.DisposeAsync();
+            }
+        }
+    }
+
+    public class LockerBuilder(CancellationToken cancellationToken = default)
+    {
+        private TimeSpan? minimumTime;
+        private Func<Task>? toggleDisable;
+        private CancellationToken cancellationToken = cancellationToken;
+
+        public static LockerBuilder Create() => new();
+        public static LockerBuilder Create(HttpContext? httpContext) => new(httpContext?.RequestAborted ?? default);
+        public static LockerBuilder Create(CancellationToken cancellationToken) => new(cancellationToken);
+
+        public LockerBuilder MinimumTime(TimeSpan minimumTime)
+        {
+            this.minimumTime = minimumTime;
+            return this;
+        }
+
+        public LockerBuilder ToggleDisableUsing(Func<Task> toggleDisable)
+        {
+            this.toggleDisable = toggleDisable;
+            return this;
+        }
+
+        public Locker Build() => new(minimumTime, toggleDisable, cancellationToken);
+
+        public async Task<Locker> BuildAndToggle()
+        {
+            ArgumentNullException.ThrowIfNull(toggleDisable);
+
+            await toggleDisable.Invoke();
+
+            return Build();
+        }
     }
 }
