@@ -20,4 +20,12 @@ public class EventCallbackBucket : EventCallbackBucketBase<Func<Task>>
             await callback.Value();
         }
     }
+
+    public async Task InvokeExceptAsync(params IEnumerable<EventSubscription> eventSubscriptionsToExclude)
+    {
+        foreach (var callback in EventCallbacks.Where(kv => !eventSubscriptionsToExclude.Contains(kv.Key)))
+        {
+            await callback.Value();
+        }
+    }
 }

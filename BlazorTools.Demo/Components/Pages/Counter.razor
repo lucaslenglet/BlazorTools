@@ -32,6 +32,6 @@
 
     public bool Display { get; set; } = true;
 
-    // Optional; useful when this component provides methods to child components that can sometimes trigger a render of the whole component
+    // Optional; useful when you want to make sure that nothing triggers a re-render of the whole component
     protected override bool ShouldRender() => false;
 }

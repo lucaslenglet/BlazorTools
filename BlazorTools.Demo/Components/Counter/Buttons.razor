@@ -5,13 +5,19 @@
 }
 
 <Button OnClick="AddOne" Value="Click me" />
-<Button OnClick="Add10" Value="Add 10" />
-<Button OnClick="Reset" Value="Reset" />
-<Button OnClick="ToggleDisplay" Style="Button.ButtonStyle.secondary" Value="Toggle Display" />
+<CascadingValue Value="OnDisableToggled" IsFixed="true">
+    <Button OnClick="Add10" Value="Add 10" />
+    <Button OnClick="Reset" Value="Reset" />
+    <Button OnClick="ToggleDisplay" Style="Button.ButtonStyle.secondary" Value="Toggle Display" />
+</CascadingValue>
 
 @code {
     [CascadingParameter]
     public Pages.Counter Counter { get; set; } = default!;
+
+    public EventCallbackBucket OnDisableToggled { get; } = new();
+
+    public bool IsActive { get; set; }
 
     private Task AddOne() => SetCount(Counter.CurrentCount + 1);
 

@@ -1,5 +1,7 @@
 ﻿@using System.Diagnostics
 
+@implements IDisposable
+
 @inject ILogger<Button> Logger
 
 @{
@@ -30,14 +32,26 @@
     [Parameter]
     public ButtonStyle? Style { get; set; } = ButtonStyle.primary;
 
+    [Parameter, CascadingParameter]
+    public EventCallbackBucket? OnDisableToggled { get; set; }
+
     private bool disabled = false;
     private string? lastExecutionTime;
+    private EventSubscription eventSubscription = new();
 
     public enum ButtonStyle
     {
         primary,
         secondary,
         danger
+    }
+
+    protected override void OnInitialized()
+    {
+        if (OnDisableToggled is not null)
+        {
+            OnDisableToggled.Subscribe(eventSubscription , () => ToggleDisable(true));
+        }
     }
 
     private async Task OnClickInternal()
@@ -56,7 +70,7 @@
 
         await using var _ = await LockerBuilder.Create()
             .MinimumTime(TimeSpan.FromMilliseconds(500))
-            .ToggleDisableUsing(ToggleDisable)
+            .ToggleDisableUsing(SmartToggleDisable)
             .BuildAndToggle(); // 4
 
         // var minExecTime = MinExecTime.FromNow(500); // 1
@@ -75,16 +89,32 @@
         // lastExecutionTime = $"Last exection took {fullExecTime}s"; // 2
     }
 
-    private async Task ToggleDisable()
+    private async Task SmartToggleDisable()
     {
-        if (disabled)
-        {
-            disabled = false;
-            return;
-        }
+        await ToggleDisable(false);
 
-        disabled = true;
-        await InvokeAsync(StateHasChanged);
+        if (OnDisableToggled is not null)
+        {
+            await OnDisableToggled.InvokeExceptAsync(eventSubscription);
+        }
+    }
+
+    private async Task ToggleDisable(bool forceRender)
+    {
+        disabled = !disabled;
+
+        if (disabled || forceRender)
+        {
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    public void Dispose()
+    {
+        if (OnDisableToggled is not null)
+        {
+            OnDisableToggled.Unsubscribe(eventSubscription);
+        }
     }
 
     public class Locker : IAsyncDisposable
@@ -108,7 +138,7 @@
             if (minimumTime is not null)
             {
                 deferedMinimumTimeExecution = DeferedExecutionAsync.For(
-                    value: MinimumExecutionTime.FromNowAtLeast(minimumTime.Value), 
+                    value: MinimumExecutionTime.FromNowAtLeast(minimumTime.Value),
                     func: min => min.WaitIfUnder(cancellationToken));
             }
         }
