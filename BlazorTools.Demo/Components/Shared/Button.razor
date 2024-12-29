@@ -1,4 +1,11 @@
 ﻿@using System.Diagnostics
+
+@inject ILogger<Button> Logger
+
+@{
+    Logger.LogRender(this.GetHashCode());
+}
+
 <button class="btn btn-@Style.ToString()" @onclick="OnClickInternal" disabled=@disabled title="@lastExecutionTime">
     @if (!string.IsNullOrWhiteSpace(Value))
     {
@@ -43,17 +50,32 @@
             return;
         }
 
-        var minExecTime = MinExecTime.FromNow();
+        await ToggleDisable();
+        // var minExecTime = MinExecTime.FromNow(500);
 
-        disabled = true;
-        await InvokeAsync(StateHasChanged);
+        await using var toggleDisable = DeferedExecutionAsync.For(ToggleDisable);
+        var execution = DeferedExecutionAsync.For(MinimumExecutionTime.FromNowAtLeast(milliseconds: 500), min => min.WaitIfUnder(HttpContext?.RequestAborted ?? default));
 
         await OnClick.InvokeAsync();
 
-        await minExecTime.WaitBeforeContinue(TimeSpan.FromSeconds(0.5));
-        disabled = false;
+        // await minExecTime.WaitIfUnder();
+        // await ToggleDisable();
 
-        var fullExecTime = Stopwatch.GetElapsedTime(minExecTime.Start).TotalSeconds;
+        await execution.DisposeAsync();
+
+        var fullExecTime = Stopwatch.GetElapsedTime(execution.Value.Start).TotalSeconds;
         lastExecutionTime = $"Last exection took {fullExecTime}s";
+    }
+
+    private async Task ToggleDisable()
+    {
+        if (disabled)
+        {
+            disabled = false;
+            return;
+        }
+
+        disabled = true;
+        await InvokeAsync(StateHasChanged);
     }
 }

@@ -11,6 +11,7 @@ public static class LoggerExtensions
 
     [Conditional("DEBUG")]
     public static void LogRender(this ILogger logger,
+        object? value = default,
         [System.Runtime.CompilerServices.CallerFilePath] string sourceFilePath = "")
     {
         const LogLevel logLevel = LogLevel.Debug;
@@ -25,11 +26,12 @@ public static class LoggerExtensions
                     TimeProvider.System.GetElapsedTime(startTicks, currentTicks).Duration(),
                     TimeProvider.System.GetElapsedTime(previousTicks, currentTicks),
                     Environment.CurrentManagedThreadId,
-                    Path.GetFileNameWithoutExtension(sourceFilePath));
+                    Path.GetFileNameWithoutExtension(sourceFilePath),
+                    value?.ToString() ?? "NA");
                 previousTicks = currentTicks;
             }
         }
     }
 
-    const string message = "{ticksStart} | {ticksPrevious} | {threadId} | {componentName}";
+    const string message = "{ticksStart} | {ticksPrevious} | {threadId} | {componentName} ({value})";
 }
