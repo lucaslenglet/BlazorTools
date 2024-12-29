@@ -4,13 +4,10 @@
     Logger.LogRender();
 }
 
-<button class="btn btn-primary" @onclick="AddOne">Click me</button>
-
-<button class="btn btn-primary" @onclick="Add10">Add 10</button>
-
-<button class="btn btn-primary" @onclick="Reset">Reset</button>
-
-<button class="btn btn-secondary" @onclick="ToggleDisplay">Toggle Display</button>
+<Button OnClick="AddOne" Value="Click me" />
+<Button OnClick="Add10" Value="Add 10" />
+<Button OnClick="Reset" Value="Reset" />
+<Button OnClick="ToggleDisplay" Style="Button.ButtonStyle.secondary" Value="Toggle Display" />
 
 @code {
     [CascadingParameter]

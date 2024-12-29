@@ -1,0 +1,59 @@
+﻿@using System.Diagnostics
+<button class="btn btn-@Style.ToString()" @onclick="OnClickInternal" disabled=@disabled title="@lastExecutionTime">
+    @if (!string.IsNullOrWhiteSpace(Value))
+    {
+        @Value
+    }
+    else
+    {
+        @ChildContent
+    }
+</button>
+
+@code {
+    [Parameter, ]
+    public EventCallback OnClick { get; set; }
+
+    [Parameter]
+    public string? Value { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public ButtonStyle? Style { get; set; } = ButtonStyle.primary;
+
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    private bool disabled = false;
+    private string? lastExecutionTime;
+
+    public enum ButtonStyle
+    {
+        primary,
+        secondary,
+        danger
+    }
+
+    private async Task OnClickInternal()
+    {
+        if (!OnClick.HasDelegate || disabled)
+        {
+            return;
+        }
+
+        var minExecTime = MinExecTime.FromNow();
+
+        disabled = true;
+        await InvokeAsync(StateHasChanged);
+
+        await OnClick.InvokeAsync();
+
+        await minExecTime.WaitBeforeContinue(TimeSpan.FromSeconds(0.5));
+        disabled = false;
+
+        var fullExecTime = Stopwatch.GetElapsedTime(minExecTime.Start).TotalSeconds;
+        lastExecutionTime = $"Last exection took {fullExecTime}s";
+    }
+}
