@@ -19,7 +19,7 @@
     protected override void OnInitialized()
     {
         currentCount = Counter.CurrentCount;
-        OnCountUpdatedSubscription = Counter.OnCountUpdated.Subscribe(StateHasChanged);
+        OnCountUpdatedSubscription = Counter.OnCountUpdated.SubscribeSync(StateHasChanged);
     }
 
     public void Dispose()

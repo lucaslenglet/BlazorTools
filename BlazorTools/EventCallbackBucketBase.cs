@@ -2,7 +2,7 @@
 
 namespace BlazorTools;
 
-public class EventCallbackBucketBase<TCallback>
+public abstract class EventCallbackBucketBase<TCallback>
 {
     protected ConcurrentDictionary<EventSubscription, TCallback> EventCallbacks { get; } = [];
 
@@ -13,12 +13,18 @@ public class EventCallbackBucketBase<TCallback>
 
     public EventSubscription Subscribe(EventSubscription subscription, TCallback callback)
     {
+        ArgumentOutOfRangeException.ThrowIfEqual(subscription, default);
+
         EventCallbacks.TryAdd(subscription, callback);
         return subscription;
     }
 
-    public bool Unsubscribe(EventSubscription subscription) =>
-        EventCallbacks.TryRemove(subscription, out _);
+    public bool Unsubscribe(EventSubscription subscription)
+    {
+        ArgumentOutOfRangeException.ThrowIfEqual(subscription, default);
+
+        return EventCallbacks.TryRemove(subscription, out _);
+    }
 
     public void Clear() => EventCallbacks.Clear();
 }

@@ -2,7 +2,7 @@
 
 public class EventCallbackBucket<TValue> : EventCallbackBucketBase<Func<TValue, Task>>
 {
-    public EventSubscription Subscribe(Action<TValue> callback)
+    public EventSubscription SubscribeSync(Action<TValue> callback)
     {
         var subscription = new EventSubscription();
         EventCallbacks.TryAdd(subscription, (value) =>

@@ -18,6 +18,6 @@
 
     protected override void OnInitialized()
     {
-        Counter.OnDisplayChanged.Subscribe(StateHasChanged);
+        Counter.OnDisplayChanged.SubscribeSync(StateHasChanged);
     }
 }
